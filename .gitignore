@@ -1,0 +1,45 @@
+gs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Environment
+.env
+
+# Node.js
+node_modules/
+
+# Generated files and folders
+dist/
+build/
+*.db
+*.sqlite
+*.log
+
+# Dependency directories
+.jest/
+coverage/
+
+# IDE and editor specific files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Testing
+__snapshots__/
+
+# Build files
+build/
