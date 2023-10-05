@@ -1,3 +1,4 @@
+import { compare, hash } from "bcrypt";
 import { Model, ObjectId, Schema, model } from "mongoose";
 
 interface IUser {
@@ -12,7 +13,11 @@ interface IUser {
   following: ObjectId[];
 }
 
-const userSchema = new Schema<IUser>({
+interface IMethods {
+  comparePassword(password: string): Promise<boolean>
+}
+
+const userSchema = new Schema<IUser, {}, IMethods>({
   name: {
     type: String,
     required: true,
@@ -52,4 +57,14 @@ const userSchema = new Schema<IUser>({
   tokens: [String]
 }, { timestamps: true });
 
-export default model("User", userSchema) as Model<IUser>;
+userSchema.pre('save', async function(next) {
+  if (this.isModified('password'))
+    this.password = await hash(this.password, 10);
+  next();
+});
+
+userSchema.methods.compareToken = async function(password: string) {
+  return await compare(password, this.password);
+}
+
+export default model("User", userSchema) as Model<IUser, {}, IMethods>;

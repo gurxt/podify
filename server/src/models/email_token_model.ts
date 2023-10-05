@@ -1,5 +1,5 @@
-  
 import { Model, ObjectId, Schema, model } from "mongoose";
+import { hash, compare } from 'bcrypt';
 
 interface IEmailToken {
   owner: ObjectId;
@@ -7,7 +7,11 @@ interface IEmailToken {
   createdAt: Date; // expire after 1 hour.
 }
 
-const emailToken = new Schema<IEmailToken>({
+interface IMethods {
+  compareToken(token: string): Promise<boolean>
+}
+
+const emailToken = new Schema<IEmailToken, {}, IMethods>({
   owner: {
     type: Schema.Types.ObjectId,
     required: true,
@@ -24,4 +28,14 @@ const emailToken = new Schema<IEmailToken>({
   }
 })
 
-export default model("EmailToken", emailToken) as Model<IEmailToken>;
+emailToken.pre('save', async function(next) {
+  if (this.isModified('token'))
+    this.token = await hash(this.token, 10);
+  next();
+});
+
+emailToken.methods.compareToken = async function(token: string) {
+  return await compare(token, this.token);
+}
+
+export default model("EmailToken", emailToken) as Model<IEmailToken, {}, IMethods>;
