@@ -63,7 +63,11 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-userSchema.methods.compareToken = async function(password: string) {
+userSchema.methods.compareToken = async function(token: string) {
+  return await compare(token, this.token);
+}
+
+userSchema.methods.comparePassword = async function(password: string) {
   return await compare(password, this.password);
 }
 

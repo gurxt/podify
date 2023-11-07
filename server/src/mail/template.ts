@@ -1,11 +1,12 @@
 interface IOptions {
   title: string;
   message: string;
-  logo: string
+  logo: string;
+  header: string;
 }
 
 export const emailTemplate = (options: IOptions) => {
-  const { title, message, logo } = options;
+  const { header, title, message, logo } = options;
 
   return `
 <!DOCTYPE html>
@@ -119,7 +120,7 @@ export const emailTemplate = (options: IOptions) => {
 <tr>
 <td class="pad" style="padding-bottom:15px;padding-top:10px;">
 <div style="color:#ffffff;font-family:'Varela Round', 'Trebuchet MS', Helvetica, sans-serif;font-size:30px;line-height:120%;text-align:center;mso-line-height-alt:36px;">
-<p style="margin: 0; word-break: break-word;"><span>Reset Your Password</span></p>
+<p style="margin: 0; word-break: break-word;"><span>${header}</span></p>
 </div>
 </td>
 </tr>

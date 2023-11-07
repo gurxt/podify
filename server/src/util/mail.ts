@@ -17,7 +17,6 @@ const generateMailTransporter = () => {
 }
 
 interface IProfile {
-  name: string;
   email: string;
   userId: string;
 }
@@ -25,7 +24,7 @@ interface IProfile {
 export const sendVerificationMail = async (token: string, profile: IProfile) => {
   const transport = generateMailTransporter();
 
-  const { name, email, userId } = profile;
+  const { email, userId } = profile;
 
   await email_token_model.create({
     owner: userId,
@@ -36,9 +35,10 @@ export const sendVerificationMail = async (token: string, profile: IProfile) => 
     to: email,
     from: process.env.VERIFICATION_EMAIL,
     html: emailTemplate({ 
+      header: "Account Verification",
       title: token, 
       message: "Here is your OTP token: ", 
-      logo: "cid:logo"
+      logo: "cid:logo",
     }),
     attachments: [
       {
@@ -64,8 +64,37 @@ export const sendResetPasswordLink = async (options: IOptions) => {
     to: email,
     from: process.env.VERIFICATION_EMAIL,
     html: emailTemplate({ 
-      title: email, 
-      message: `Reset password: ${link}`,
+      header: "Reset Your Password",
+      message: `Reset password by clicking the link ${link}`, 
+      title: `${link}`,
+      logo: "cid:logo"
+    }),
+    attachments: [
+      {
+        filename: "logo.png",
+        path: path.join(__dirname, "../mail/logo.png"),
+        cid: "logo" 
+      }
+    ]
+  });
+}
+
+interface IEmail {
+  email: string;
+}
+
+export const sendPasswordResetSuccessEmail = async (options: IEmail) => {
+  const transport = generateMailTransporter();
+
+  const { email } = options;
+
+  transport.sendMail({
+    to: email,
+    from: process.env.VERIFICATION_EMAIL,
+    html: emailTemplate({ 
+      header: "Password Reset Result",
+      message: "Password successfully updated", 
+      title: ``,
       logo: "cid:logo"
     }),
     attachments: [
