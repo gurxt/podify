@@ -49,3 +49,31 @@ export const sendVerificationMail = async (token: string, profile: IProfile) => 
     ]
   });
 }
+
+interface IOptions {
+  email: string;
+  link: string;
+}
+
+export const sendResetPasswordLink = async (options: IOptions) => {
+  const transport = generateMailTransporter();
+
+  const { email, link } = options;
+
+  transport.sendMail({
+    to: email,
+    from: process.env.VERIFICATION_EMAIL,
+    html: emailTemplate({ 
+      title: email, 
+      message: `Reset password: ${link}`,
+      logo: "cid:logo"
+    }),
+    attachments: [
+      {
+        filename: "logo.png",
+        path: path.join(__dirname, "../mail/logo.png"),
+        cid: "logo" 
+      }
+    ]
+  });
+}

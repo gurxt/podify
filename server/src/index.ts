@@ -1,7 +1,7 @@
 import express from 'express';
 import 'dotenv/config';
 import '#/db';
-import authRouter from './routes/auth_route';
+import authRouter from './routers/auth_route';
 
 const PORT = process.env.PORT ?? 8989;
 
