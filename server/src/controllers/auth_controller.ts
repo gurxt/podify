@@ -1,18 +1,21 @@
-import { IUser } from '#/util/types/user_types';
+import { IUser } from '#/util/@types/user_types';
 import User from '#/models/user_model';
 import { RequestHandler, Response } from 'express';
-import { generateToken } from '#/util/generate_token';
+import { formatProfile, generateToken } from '#/util/helpers';
 import {
   sendPasswordResetSuccessEmail,
   sendResetPasswordLink,
   sendVerificationMail,
 } from '#/util/mail';
-import { IVerifyEmail } from '#/util/types/verify_email_types';
+import { IVerifyEmail } from '#/util/@types/verify_email_types';
 import emailToken from '#/models/email_token_model';
 import { isValidObjectId } from 'mongoose';
 import passwordToken from '#/models/password_token_model';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
+import { RequestWithFiles } from '#/middleware/fileParser';
+import cloudinary from '#/cloud';
+import formidable from 'formidable';
 
 export const createUser: RequestHandler = async (req: IUser, res: Response) => {
   const { email, password, name } = req.body;
@@ -130,20 +133,74 @@ export const signIn: RequestHandler = async (req, res: Response) => {
     const token = jwt.sign({ userId: user._id }, SECRET, { expiresIn: '1d' });
     user.tokens.push(token);
     await user.save();
-    res.json({ 
-      profile: { 
-        id: user._id, 
-        name: user.name, 
-        email: user.email, 
-        verified: user.verified, 
-        avatar: user.avatar?.url, 
+    res.json({
+      profile: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        verified: user.verified,
+        avatar: user.avatar?.url,
         followers: user.followers.length,
         following: user.following.length,
       },
-      token
-    })
+      token,
+    });
   } else {
     res.status(403).json({ error: 'JWT_SECRET returned null' });
     return;
   }
+};
+
+export const sendProfile: RequestHandler = async (req, res: Response) => {
+  res.json({ profile: req.user });
+};
+
+export const updateProfile: RequestHandler = async (
+  req: RequestWithFiles,
+  res: Response
+) => {
+  const { name } = req.body;
+  const avatar = req.files?.avatar as formidable.File;
+
+  const user = await User.findById(req.user.id);
+  if (!user) throw new Error('something went wrong, user not found.');
+
+  if (typeof name !== 'string')
+    res.status(422).json({ error: 'Invalid name!' });
+  if (name.trim().length < 3) res.status(422).json({ error: 'Invalid name!' });
+
+  if (avatar) {
+    if (user.avatar?.publicId) {
+      await cloudinary.uploader.destroy(user.avatar.publicId);
+    }
+
+    const { secure_url, public_id } = await cloudinary.uploader.upload(
+      avatar.filepath,
+      {
+        width: 300,
+        height: 300,
+        crop: 'thumb',
+        gravity: 'face',
+      }
+    );
+    user.avatar = { url: secure_url, publicId: public_id };
+  }
+
+  await user.save();
+
+  res.json({ profile: formatProfile(user) });
+};
+
+export const logOut: RequestHandler = async (req, res) => {
+  const { fromAll } = req.query;
+
+  const token = req.token;
+  const user = await User.findById(req.user.id);
+  if (!user) throw new Error('something went wrong, user not found.');
+
+  if (fromAll === 'yes') user.tokens = [];
+  else user.tokens = user.tokens.filter((tkn) => tkn !== token);
+
+  await user.save();
+  res.json({ success: true });
 };

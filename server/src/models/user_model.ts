@@ -1,7 +1,8 @@
-import { compare, hash } from "bcrypt";
-import { Model, ObjectId, Schema, model } from "mongoose";
+import { compare, hash } from 'bcrypt';
+import { Model, ObjectId, Schema, model } from 'mongoose';
 
-interface IUser {
+export interface User {
+  _id: ObjectId;
   name: string;
   email: string;
   password: string;
@@ -14,61 +15,70 @@ interface IUser {
 }
 
 interface IMethods {
-  comparePassword(password: string): Promise<boolean>
+  comparePassword(password: string): Promise<boolean>;
 }
 
-const userSchema = new Schema<IUser, {}, IMethods>({
-  name: {
-    type: String,
-    required: true,
-    trim: true 
+const userSchema = new Schema<User, {}, IMethods>(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    verified: {
+      type: Boolean,
+      default: false,
+    },
+    avatar: {
+      type: Object,
+      url: String,
+      publicId: String,
+    },
+    favorites: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Audio',
+      },
+    ],
+    followers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    following: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    tokens: [String],
   },
-  email: {
-    type: String,
-    required: true,
-    trim: true,
-    unique: true
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  verified: {
-    type: Boolean,
-    default: false,
-  },
-  avatar: {
-    type: Object,
-    url: String,
-    publicId: String
-  },
-  favorites: [{
-    type: Schema.Types.ObjectId,
-    ref: "Audio"
-  }],
-  followers: [{
-    type: Schema.Types.ObjectId,
-    ref: "User"
-  }],
-  following: [{
-    type: Schema.Types.ObjectId,
-    ref: "User"
-  }],
-  tokens: [String]
-}, { timestamps: true });
+  { timestamps: true }
+);
 
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (this.isModified('password'))
     this.password = await hash(this.password, 10);
   next();
 });
 
-userSchema.methods.compareToken = async function(token: string) {
+userSchema.methods.compareToken = async function (token: string) {
   return await compare(token, this.token);
-}
+};
 
-userSchema.methods.comparePassword = async function(password: string) {
+userSchema.methods.comparePassword = async function (password: string) {
   return await compare(password, this.password);
-}
+};
 
-export default model("User", userSchema) as Model<IUser, {}, IMethods>;
+export default model('User', userSchema) as Model<User, {}, IMethods>;
