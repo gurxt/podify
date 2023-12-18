@@ -1,4 +1,4 @@
-import { createAudio } from '#/controllers/audio_controller';
+import { createAudio, updateAudio } from '#/controllers/audio_controller';
 import { isVerified, mustAuth } from '#/middleware/auth';
 import fileParser from '#/middleware/fileParser';
 import { validate } from '#/middleware/validator';
@@ -14,6 +14,15 @@ audioRouter.post(
   fileParser,
   validate(AudioValidationSchema),
   createAudio
+);
+
+audioRouter.patch(
+  '/:audioId',
+  mustAuth,
+  isVerified,
+  fileParser,
+  validate(AudioValidationSchema),
+  updateAudio
 );
 
 export default audioRouter;
