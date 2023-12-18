@@ -146,8 +146,7 @@ export const signIn: RequestHandler = async (req, res: Response) => {
       token,
     });
   } else {
-    res.status(403).json({ error: 'JWT_SECRET returned null' });
-    return;
+    return res.status(403).json({ error: 'JWT_SECRET returned null' });
   }
 };
 
