@@ -4,6 +4,7 @@ import '#/db';
 import authRouter from './routers/auth_route';
 import audioRouter from './routers/audio_route';
 import favoriteRouter from './routers/favorite_route';
+import playlistRouter from './routers/playlist_route';
 
 const PORT = process.env.PORT ?? 8989;
 
@@ -16,5 +17,6 @@ app.use(express.static('src/public'));
 app.use('/auth', authRouter);
 app.use('/audio', audioRouter);
 app.use('/favorite', favoriteRouter);
+app.use('/playlist', playlistRouter);
 
 app.listen(PORT, () => console.log(`[INFO] listening on port ${PORT}`));
